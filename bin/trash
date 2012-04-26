@@ -1,0 +1,12 @@
+#!/bin/sh
+
+DEFAULT_TRASH_DIR="$HOME/.trash"
+TRASH_DIR=${TRASH_DIR:-$DEFAULT_TRASH_DIR}
+
+if [[ ! -d $TRASH_DIR ]] ; then
+	mkdir $TRASH_DIR
+fi
+
+for i in $* ; do
+	mv --backup=numbered $i $TRASH_DIR
+done

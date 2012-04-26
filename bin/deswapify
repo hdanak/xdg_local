@@ -1,0 +1,15 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+
+my $find_dir = @ARGV ? $ARGV[0] : '.';
+my @swp_files = `find $find_dir | grep .swp`;
+chomp @swp_files;
+map { my $swp=$_; s/\/\.(.*?).swp$/\/$1/; $_ = [$swp, $_] } @swp_files;
+for (@swp_files) {
+	my ($swp, $src) = @$_;
+	`vim -r -c ":wq" $src`;
+	print "Trashing $swp ...\n";
+	`/home/hdanak/local/bin/trash $swp`;
+}
+

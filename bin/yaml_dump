@@ -1,0 +1,8 @@
+#!/usr/bin/perl -w
+use strict;
+
+use YAML::XS qw/LoadFile/;
+use Data::Dumper;
+
+@ARGV or die "No YAML file provided\n";
+print Dumper LoadFile $ARGV[0];
