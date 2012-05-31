@@ -1,0 +1,97 @@
+#!/usr/bin/perl
+#
+
+use strict;
+use warnings;
+
+use XML::Simple;
+use JSON;
+use LWP::Curl;
+use Time::Interval;
+
+my $lwpcurl = LWP::Curl->new;
+my $cal_url = '...';
+my $cal_xml = $lwpcurl->get($cal_url);
+my $xml = XML::Simple->new;
+my $cal = $xml->XMLin($cal_xml);
+my $date_pattern = '(\S+) (\S+) (\d+), (\d+)';
+my $time_pattern = '(\d+(?::\d+)?[ap]m)';
+my %months = (
+                Jan => 0, Feb => 1, Mar => 2, Apr => 3, May => 4, Jun => 5,
+                Jul => 6, Aug => 7, Sep => 8, Oct => 9, Nov => 10, Dec => 11,
+            );
+my @work_hours = sort {
+        my $m1 = $a->[0]->[0];
+        my $d1 = $a->[0]->[1];
+        my $m2 = $b->[0]->[0];
+        my $d2 = $b->[0]->[1];
+        if ($m1 == $m2) {
+            $d1 <=> $d2
+        } else {
+            $m1 <=> $m2
+        }
+    } map {
+        my ($i1, $i2, $i3, $i4, $i5) = @{$_->[0]};
+        my $str1 = "$i1 $i2 $i3, $i4 $i5";
+        my $arr1 = [$months{$i2}, $i3, $i4, $i5];
+        ($i1, $i2, $i3, $i4, $i5) = @{$_->[1]};
+        my $str2 = "$i1 $i2 $i3, $i4 $i5";
+        my $arr2 = [$months{$i2}, $i3, $i4, $i5];
+        [
+            $arr1,
+            $str1,
+            $arr2,
+            $str2,
+            getInterval($str1, $str2),
+        ]
+    } map {
+        /When: $date_pattern $time_pattern to (?:$date_pattern )?$time_pattern/ && [
+            [$1, $2, $3, $4, $5],
+            defined $6 ? [$6, $7, $8, $9, $10]
+                       : [$1, $2, $3, $4, $10],
+        ]
+    } grep {
+        /\\work/
+    } map {
+        $_->{content}->{content}
+    } values $cal->{entry};
+
+for (@ARGV) {
+    if (/^--graphical$/) {
+        print_graphical()
+    } elsif (/^--json$/) {
+        print to_json(\@work_hours)
+    } elsif (/^--xml$/) {
+        print $xml->XMLout(\@work_hours)
+    }
+}
+
+print_graphical() unless @ARGV;
+
+sub print_graphical {
+    for (@work_hours) {
+        printf "* %s -> %s\n", $_->[1], $_->[2]->[3];
+        my $count = $_->[4]->{hours} + $_->[4]->{minutes}/60.0;
+        print progress_bar($count, 24);
+        printf " :: %d:%02d (\$%d)\n", $_->[4]->{hours}, $_->[4]->{minutes}, ($_->[4]->{hours} + $_->[4]->{minutes}/60.0) * 25;
+    }
+}
+
+sub progress_bar {
+    my ($num, $max, $size, $major, $minor, $filler) = @_;
+    $size //= $max;
+    $major //= '#';
+    $minor //= '=';
+    $filler //= '-';
+
+    my $count = $num/$max * $size;
+    my $partial = (int($count + 0.5) == int($count) + 1);
+    $count = int($count);
+
+    my $out = '['
+            . $major x $count
+            . ($partial ? $minor : $filler)
+            . $filler x ($size - $count - 1)
+            . ']';
+    return $out
+}
