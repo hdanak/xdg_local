@@ -1,0 +1,49 @@
+#!/usr/bin/perl
+#
+
+use strict;
+use warnings;
+
+use XML::Simple;
+use LWP::Curl;
+use JSON;
+use Data::Dumper;
+
+my $station = 'embr';
+my $mode = 'text';
+for (@ARGV) {
+    if (/^--(mode=)?xml$/) {
+        $mode = 'xml'
+    } elsif (/^--(mode=)?json$/) {
+        $mode = 'json'
+    } elsif (/^--(mode=)?text$/) {
+        $mode = 'text'
+    } elsif (/^--(mode=)?dumper$/) {
+        $mode = 'dumper'
+    } elsif (/^--station=(.*)$/) {
+        $station = $1;
+    }
+}
+my $curl = LWP::Curl->new;
+my $xml = XML::Simple->new;
+my $url = "http://api.bart.gov/api/etd.aspx?cmd=etd&orig=$station&key=MW9S-E7SL-26DU-VV8V";
+my $raw = $curl->get($url);
+my $feed = $xml->XMLin($raw);
+
+if ($mode eq 'text') {
+    print_text()
+} elsif ($mode eq 'json') {
+    print to_json($feed);
+} elsif ($mode eq 'xml') {
+    print $xml->XMLout($feed)
+} elsif ($mode eq 'dumper') {
+    print Dumper($feed);
+}
+
+sub print_text{
+    for (@{$feed->{station}->{etd}}) {
+        my %dirs;
+        my $dest = $_->{destination};
+        printf "%s (%s cars) - %s minutes\n", $dest, $_->{estimate}->[0]->{length}, join ', ', map {$_->{minutes}} @{$_->{estimate}};
+    }
+}
