@@ -1,0 +1,22 @@
+#!/usr/bin/perl
+#
+use strict;
+use warnings;
+
+system 'vim'
+, '-p', map {
+    system 'vim', '-r', '-c', ':wq', $_->[0];
+    system 'rm', '-i', $_->[1];
+    $_->[0]
+} map {
+    [map { join '/', @$_ } ($_, [$_->[0], ".$_->[1].swp"])]
+} map {
+   [m/
+        ^
+        (.*?)
+        \/\.
+        ([^\/]+)
+        \.swp
+        $
+    /x]
+} `find . | grep .swp`;
