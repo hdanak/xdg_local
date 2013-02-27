@@ -1,11 +1,8 @@
-#!/usr/bin/perl
-#
-
-use strict;
-use warnings;
+#!/usr/bin/env perl
+use Modern::Perl;
 
 use XML::Simple;
-use LWP::Curl;
+use LWP::UserAgent;
 use JSON;
 use Data::Dumper;
 
@@ -24,11 +21,11 @@ for (@ARGV) {
         $station = $1;
     }
 }
-my $curl = LWP::Curl->new;
 my $xml = XML::Simple->new;
 my $url = "http://api.bart.gov/api/etd.aspx?cmd=etd&orig=$station&key=MW9S-E7SL-26DU-VV8V";
-my $raw = $curl->get($url);
-my $feed = $xml->XMLin($raw);
+my $res = LWP::UserAgent->new->get($url);
+die "Error: Unable to make requests to BART api.\n" unless $res->is_success;
+my $feed = $xml->XMLin($res->decoded_content);
 
 if ($mode eq 'text') {
     print_text()

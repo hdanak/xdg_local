@@ -1,0 +1,8 @@
+#!/bin/sh
+
+if [ $1 ]
+then
+    echo '0 on' > /proc/acpi/ibm/led
+else
+    echo '0 blink' > /proc/acpi/ibm/led
+fi

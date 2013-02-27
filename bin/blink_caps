@@ -1,0 +1,15 @@
+#!/usr/bin/perl
+
+use strict;
+use warnings;
+use feature 'state';
+
+sub sign {
+	state $current = 0;
+	$current = !$current;
+	return $current ? '+' : '-';
+}
+while (1) {
+	`setleds @{[sign]}caps < /dev/console`;
+	sleep 1
+}

@@ -1,0 +1,3 @@
+#!/bin/sh
+
+perlfind -t -f $* 2>/dev/null || perlfind -t -v $* 2>/dev/null || perlfind -t $*

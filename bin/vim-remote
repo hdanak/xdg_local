@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+SERVERNAME=$1
+FIRSTFILE=$2
+shift 2
+vim --servername $SERVERNAME -p $* --remote $FIRSTFILE

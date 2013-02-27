@@ -1,0 +1,6 @@
+#!/bin/sh
+
+NOTE_TEXT=`kdialog --caption 'Create Note' --textinputbox ' '`
+if [ $? -eq 0 ]; then
+    echo " $NOTE_TEXT" >> ~/notes
+fi
