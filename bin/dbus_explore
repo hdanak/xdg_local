@@ -1,0 +1,22 @@
+#!/usr/bin/env perl
+use Modern::Perl;
+use Net::DBus;
+use Net::DBus::Dumper;
+use Data::Dumper qw//;
+
+*Dumper = (@ARGV ~~ /^-d|--dumper$/) ? \&Data::Dumper::Dumper : sub {@_};
+
+sub Net::DBus::explore {
+    my $bus = shift;
+    if (@_ == 0) {
+        print dbus_dump($bus)
+    } elsif (@_ == 1) {
+        print dbus_dump($bus->get_service($_[0]))
+    } elsif (@_ == 2) {
+        print dbus_dump($bus->get_service($_[0])->get_object($_[1]))
+    } elsif (@_ == 3) {
+        print(Dumper($bus->get_service($_[0])->get_object($_[1])->${\$_[2]}(@_[3..$#_])))
+    }
+}
+my $bus = Net::DBus->session;
+$bus->explore(grep {!/^(?:-|--)/} @ARGV);

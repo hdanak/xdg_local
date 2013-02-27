@@ -1,0 +1,30 @@
+#!/usr/bin/env perl
+use Modern::Perl;
+use Net::Whois::Raw;
+
+sub whois_ext {
+    my ($domain, $extension) = @_;
+    whois "$domain.$extension"
+}
+
+my $whois_parsers = {
+    com => sub {
+        $_[0] !~ /No match for/
+    },
+    org => sub {
+        $_[0] !~ /NOT FOUND/
+    },
+    net => sub {
+        $_[0] !~ /No match for domain/
+    },
+};
+
+unless (caller) {
+    for my $domain (@ARGV) {
+        print "$domain:";
+        for my $ext (keys %$whois_parsers) {
+            print " $ext" if $whois_parsers->{$ext}->(whois_ext($domain, $ext));
+        }
+        print "\n";
+    }
+}

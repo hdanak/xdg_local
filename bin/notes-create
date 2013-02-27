@@ -1,6 +1,19 @@
-#!/bin/sh
+#!/usr/bin/env perl
+use Modern::Perl;
+use YAML;
 
-NOTE_TEXT=`kdialog --caption 'Create Note' --textinputbox ' '`
-if [ $? -eq 0 ]; then
-    echo " $NOTE_TEXT" >> ~/notes
-fi
+my $raw_note = `kdialog --caption 'Create Note' --textinputbox ' '`;
+unless ($?) {
+    $raw_note =~ s/\t/    /g;
+    my @lines = split /^/, $raw_note;
+    chomp @lines;
+    my @tags = map {/\@([-\w]+)/g} @lines;
+    print STDERR Dump {
+        title   => shift @lines,
+        tags    => \@tags,
+        body    => join("\n", @lines),
+    };
+    open(my $notes, '>>', glob('~/notes.txt'));
+    print $notes $raw_note;
+    #echo "\n--- |\n$NOTE_TEXT" | sed -e "s/^\t/|    /g" -e "s/\t/    /g" >> ~/notes.txt
+}

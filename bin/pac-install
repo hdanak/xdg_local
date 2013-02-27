@@ -1,0 +1,31 @@
+#!/usr/bin/env perl
+use strict;
+use warnings;
+use File::Temp qw/tempdir/;
+
+sub fail { die "Error: ".shift."\n" }
+sub note { print "Note: ".shift."\n" }
+sub cmd { system @_; ($? >> 8) == 0 }
+sub sudo { cmd 'sudo', @_ }
+
+for (@ARGV) {
+    cmd 'pacman', -Sp => $_
+        and sudo 'pacman', -Sy => $_
+        and next;
+    my $aur_url = "https://aur.archlinux.org/packages/".substr($_,0,2)."/$_/$_.tar.gz";
+    my $tempdir = tempdir("$_-XXXXX", DIR => "/home/hdanak/aur_packages");
+    note "Downloading AUR package to $tempdir";
+    chdir $tempdir
+        or rmdir $tempdir
+        and fail "Could not chdir to $tempdir";
+    cmd 'wget', $aur_url
+        or rmdir $tempdir
+        and fail "Could not wget '$aur_url'";
+    cmd 'tar', xvf => "$_.tar.gz"
+        or fail "Could not unpack AUR tarball";
+    chdir $_
+        or fail "Could not access AUR build directory";
+    cmd 'makepkg'
+        or fail "Could not build AUR package";
+    sudo 'pacman', -U => glob('*.pkg.tar.xz')
+}

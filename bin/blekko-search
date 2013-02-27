@@ -1,0 +1,40 @@
+#!/usr/bin/env perl
+use Modern::Perl;
+use App::Framework;
+use LWP::UserAgent;
+use JSON 'decode_json';
+use Data::Format::Pretty::YAML qw(format_pretty);
+use Data::DPath 'dpath';
+
+our $VERSION = '2012.12';
+
+sub app
+{
+    my ($app, $opts, $args) = @_ ;
+    my $ua = new LWP::UserAgent;
+
+    my $query = $args->{query};
+    my $first = $opts->{first_page};
+    my $last = $first + $opts->{pages} - 1;
+    my @urls = glob('https://blekko.com/ws/\?q='.$query.'+/json&p={'.join(',',$first..$last).'}');
+    local $\ = "\n";
+    print format_pretty decode_json($ua->get($_)->content) for @urls
+}
+
+go
+
+__DATA__
+
+[SUMMARY]
+
+[ARGS]
+* query=s           search query
+
+[OPTIONS]
+-pages|p=i          number of pages to pull     [default=1]
+Number of pages of tags to pull, starting from -first-page (usually 1).
+-first_page|f=i     first page to pull     [default=1]
+Number of first page of tags to pull.
+
+[DESCRIPTION]
+

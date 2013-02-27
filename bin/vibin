@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+vimch ~/.local/bin/$1

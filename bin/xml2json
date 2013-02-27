@@ -1,0 +1,5 @@
+#!/usr/bin/env perl
+use XML::Simple qw/XMLin/;
+use JSON qw/to_json/;
+
+print(to_json(XMLin(join('', <>))), "\n")

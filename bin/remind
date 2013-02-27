@@ -1,0 +1,64 @@
+#!/usr/bin/env perl
+use Modern::Perl;
+use Desktop::Notify;
+use Gtk3 -init;
+use AnyEvent;
+
+
+my $t_minutes = $ARGV[0] // 3;
+
+my $notifier = Desktop::Notify->new;
+my ($notify, $reminder, $timer);
+my $dialogs = 0;
+
+my $status_icon = Gtk3::StatusIcon->new();
+$status_icon->set_tooltip_text('Set Reminder');
+$status_icon->set_name('Task Reminder');
+$status_icon->set_from_stock('gtk-yes');
+$status_icon->signal_connect( activate => sub {
+    $dialogs ? return : ++$dialogs;
+    my $dialog = Gtk3::Dialog->new;
+    $dialog->set_title('Create Reminder');
+    $dialog->get_content_area->add(Gtk3::Label->new('Enter new reminder: '));
+    $dialog->add_action_widget(my $entry = Gtk3::Entry->new, 1);
+    $dialog->add_button( Ok   => 1 );
+    $dialog->add_button( Quit => 2 );
+    $dialog->show_all;
+
+    $dialog->signal_connect( response => sub {
+        my ($self, $response_id) = @_;
+        print "response: $response_id\n";
+        if ($response_id == 1) {
+            $reminder = $entry->get_text || 'BEEP';
+            $notify = $notifier->create(
+                summary => "** $reminder **",
+                body => "Stay focused!",
+                timeout => 500,
+            );
+            $timer = AnyEvent->timer(
+                interval => $t_minutes * 60,
+                cb => sub {
+                    print STDERR "* $reminder *\n";
+                    $notify->show();
+                    $notify->close();
+                }
+            );
+            $self->hide;
+            --$dialogs;
+        } elsif ($response_id == -4) {
+            --$dialogs;
+        } elsif ($response_id == 2) {
+            Gtk3::main_quit
+        }
+    });
+});
+$status_icon->signal_connect( popup_menu => sub {
+    return unless defined $notify;
+    print STDERR "* $reminder *\n";
+    $notify->show();
+    $notify->close();
+});
+
+$status_icon->signal_emit('activate');
+
+Gtk3::main;
