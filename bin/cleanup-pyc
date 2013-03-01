@@ -1,7 +1,10 @@
 #!/bin/sh
 
-find . -name "*.pyc" | xargs rm
-if [ -n $? ]
+echo -n "[32m"
+find . -name "*.pyc" | xargs rm -v 2>/dev/null
+if [ $? != 0 ]
 then
-    echo "[31mNo pyc files found[0m"
+    echo -n "[31m"
+    echo "No pyc files found"
 fi
+echo -n "[0m"
