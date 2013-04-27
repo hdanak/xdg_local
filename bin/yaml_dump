@@ -1,5 +1,5 @@
-#!/usr/bin/env perl -w
-use strict;
+#!/usr/bin/env perl
+use Modern::Perl;
 
 use YAML qw/LoadFile/;
 use Data::Dumper;
