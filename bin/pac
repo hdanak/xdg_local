@@ -1,1 +1,9 @@
-multi-exec
+#!/usr/bin/env perl
+use Dispatch::GitLike;
+
+Dispatch::GitLike->new(
+    commands    => {
+        remove  => sub { exec qw|sudo pacman -R| => @ARGV },
+        search  => sub { exec qw|pacman -Ss| => @ARGV },
+    },
+)->run(@ARGV)

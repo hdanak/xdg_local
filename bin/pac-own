@@ -1,0 +1,48 @@
+#!/usr/bin/env perl
+use Modern::Perl;
+
+my $FMT = do {
+    'tab'   when @ARGV ~~ /^--tab$/;
+    'csv'   when @ARGV ~~ /^--csv$/;
+    'json'  when @ARGV ~~ /^--json$/;
+    'xml'   when @ARGV ~~ /^--xml$/;
+    'human';
+};
+print $FMT; exit;
+sub fmt_out {
+    my (%fmt_map) = @_;
+    print $fmt_map{$FMT};
+}
+for my $file (<STDIN>) {
+    local $_ = `pacman -Qo $file 2>&1`;
+    chomp;
+    print {
+        when    /^.*? is owned by (\S+) (\S+)$/ {
+            fmt_out
+                human   => "$file:\t$1 $2",
+                tab     => "$file\t$1\t$2",
+                csv     => "$file,$1,$2",
+                json    => qq({ "filename": $file, "package": $1, "version": $2 }),
+                xml     => qq(<file name="$file" package="$1" version="$2" />),
+            ;
+        }
+        when    /^error: No package owns .*$/ {
+            do {
+                "$file:\t(no package)"  when 'human';
+                "$file\t"               when 'tab';
+                "$file,$1"              when 'csv';
+                qq({ "filename": $file, "error": $1 })
+                                        when 'json';
+            } for $FMT;
+        when    /^error: cannot determine ownership of directory/ {
+            do {
+                (<dir is empty>) ? "$file:\t(empty dir)" : ""
+                                        when 'human';
+                "$file\t$1"             when 'tab';
+                "$file,$1"              when 'csv';
+                qq({ "filename": $file, "error": " })
+                                        when 'json';
+            } for $FMT;
+        }
+    }
+}
