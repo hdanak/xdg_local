@@ -1,0 +1,7 @@
+#!/usr/bin/env perl
+use Modern::Perl;
+
+my ($contrast, $brightness) = @ARGV;
+$contrast   //= 1;
+$brightness //= 1;
+`xrandr --output LVDS1 --mode 1600x900 --gamma $contrast:$contrast:$contrast --fb 1600x900 --brightness $brightness`
