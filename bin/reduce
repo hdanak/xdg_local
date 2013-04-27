@@ -1,0 +1,11 @@
+#!/usr/bin/env perl
+use Modern::Perl;
+
+exit 1 unless @ARGV;
+my ($command, $total) = @ARGV[0..1];
+$total //= <STDIN>;
+while (<STDIN>) {
+    chomp($total, $_);
+    $total = `sh -c '$command' '' '$total' '$_'`;
+}
+print "$total\n";

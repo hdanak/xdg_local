@@ -1,0 +1,7 @@
+#!/usr/bin/env perl
+
+my $cmd = join ' ', @ARGV;
+while (<STDIN>) {
+    chomp;
+    print `$cmd '$_'`
+}
