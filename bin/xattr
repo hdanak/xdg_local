@@ -1,0 +1,28 @@
+#!/usr/bin/env perl
+use Modern::Perl;
+
+my ($filename, @attrs) = @ARGV;
+die "No filename provided\n" unless $filename;
+
+sub cmd {
+    my $cmd  = shift;
+    my @args = map { /^-/ ? " $_" : "' $_'" } @_;
+    print `$cmd@args`
+}
+sub getattr { cmd 'getfattr', @_ }
+sub setattr { cmd 'setfattr', @_ }
+
+getattr -d => $filename unless @attrs;
+for (@attrs) {
+    if (/^([^=]+)(=(.*)?)?$/) {
+        if ($2) {
+            if ($3) {
+                setattr -n => $1, -v => $3, $filename
+            } else {
+                setattr -x => $1, $filename
+            }
+        } else {
+                getattr -n => $1, $filename
+        }
+    }
+}
