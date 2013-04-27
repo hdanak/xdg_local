@@ -28,18 +28,17 @@ die "Error: Unable to make requests to BART api.\n" unless $res->is_success;
 my $feed = $xml->XMLin($res->decoded_content);
 
 if ($mode eq 'text') {
-    print_text()
+    print_text($feed)
 } elsif ($mode eq 'json') {
-    print to_json($feed);
+    print to_json($feed)
 } elsif ($mode eq 'xml') {
     print $xml->XMLout($feed)
 } elsif ($mode eq 'dumper') {
-    print Dumper($feed);
+    print Dumper($feed)
 }
 
-sub print_text{
+sub print_text{ my $feed = shift;
     for (@{$feed->{station}->{etd}}) {
-        my %dirs;
         my $dest = $_->{destination};
         printf "%s (%s cars) - %s minutes\n", $dest, $_->{estimate}->[0]->{length}, join ', ', map {$_->{minutes}} @{$_->{estimate}};
     }
