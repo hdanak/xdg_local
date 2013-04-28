@@ -4,13 +4,14 @@ use Modern::Perl;
 my ($filename, @attrs) = @ARGV;
 die "No filename provided\n" unless $filename;
 
-sub cmd {
+sub xattrcmd {
     my $cmd  = shift;
-    my @args = map { /^-/ ? " $_" : "' $_'" } @_;
-    print `$cmd@args`
+    my $filename = pop;
+    my @args = map { " '$_'" } @_;
+    print `$cmd@args $filename`
 }
-sub getattr { cmd 'getfattr', @_ }
-sub setattr { cmd 'setfattr', @_ }
+sub getattr { xattrcmd 'getfattr', @_ }
+sub setattr { xattrcmd 'setfattr', @_ }
 
 getattr -d => $filename unless @attrs;
 for (@attrs) {
