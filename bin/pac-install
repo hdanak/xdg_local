@@ -8,12 +8,14 @@ sub note { print "Note: ".shift."\n" }
 sub cmd { system @_; ($? >> 8) == 0 }
 sub sudo { cmd 'sudo', @_ }
 
+our $AUR_PKG_DIR = "~/packages/aur";
+
 for (@ARGV) {
     cmd 'pacman', -Sp => $_
         and sudo 'pacman', -Sy => $_
         and next;
     my $aur_url = "https://aur.archlinux.org/packages/".substr($_,0,2)."/$_/$_.tar.gz";
-    my $tempdir = tempdir("$_-XXXXX", DIR => "/home/hdanak/aur_packages");
+    my $tempdir = tempdir("$_-XXXXX", DIR => $AUR_PKG_DIR);
     note "Downloading AUR package to $tempdir";
     chdir $tempdir
         or rmdir $tempdir
